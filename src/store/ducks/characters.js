@@ -22,7 +22,7 @@ const changeCharacters = createActionCreator("characters/CHANGE_CHARACTERS");
 const changeTotalPages = createActionCreator("characters/CHANGE_TOTAL_PAGES");
 const changeTotal = createActionCreator("characters/CHANGE_TOTAL");
 const changePage = createActionCreator("characters/CHANGE_PAGE");
-const setLoading = createActionCreator("characters/SET_LOADING");
+export const setLoading = createActionCreator("characters/SET_LOADING");
 
 /**
  * Action - Busca por characters na API
@@ -65,6 +65,8 @@ export default function reducer(state = initialState, action) {
         "selectedCharacters",
         state.get("selectedCharacters").filter(c => c.id !== action.payload.id)
       );
+    case clearCharacters.toString():
+      return state.set("selectedCharacters", new List());
     default:
       return state;
   }

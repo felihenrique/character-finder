@@ -18,13 +18,17 @@ import store from "../store";
 import {
   searchCharacters,
   addCharacter,
-  removeCharacter
+  removeCharacter,
+  setLoading,
+  clearCharacters
 } from "../store/ducks/characters";
 import CharacterListItem from "../components/CharacterListItem";
 import LoadingCover from "../components/LoadingCover";
 import Search from "@material-ui/icons/Search";
 import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
+import Axios from "axios";
+import { API_URL } from "../config";
 
 const useStyles = makeStyles(theme => ({
   appBar: {
@@ -34,6 +38,18 @@ const useStyles = makeStyles(theme => ({
     width: "100%"
   }
 }));
+
+async function sendMail(characters, email) {
+  try {
+    await Axios.post(API_URL + "/characters/sendmail", {
+      characters: characters.map(({ name }) => ({ name })),
+      email
+    });
+    alert("Email sent");
+  } catch (err) {
+    alert("An error ocurred sending the email");
+  }
+}
 
 function Main({
   characters,
@@ -49,6 +65,7 @@ function Main({
   }, [dispatch]);
   const classes = useStyles();
   const [searchName, setSearchName] = React.useState("");
+  const [email, setEmail] = React.useState("");
   return (
     <>
       {loading ? <LoadingCover /> : null}
@@ -63,9 +80,25 @@ function Main({
           color="default"
           title={
             <>
-              {`${selectedCharacters.length} selected`}{" "}
-              <Button align="right" variant="contained" color="primary">
-                Send to mail
+              {`${selectedCharacters.length} selected`}
+              <TextField
+                value={email}
+                onChange={props => setEmail(props.target.value)}
+                placeholder="Type email"
+                style={{ marginLeft: 10, marginRight: 10 }}
+              />
+              <Button
+                align="right"
+                variant="contained"
+                color="primary"
+                onClick={async () => {
+                  dispatch(setLoading(true));
+                  await sendMail(selectedCharacters, email);
+                  dispatch(clearCharacters());
+                  dispatch(setLoading(false));
+                }}
+              >
+                Send to email
               </Button>
             </>
           }
@@ -87,6 +120,7 @@ function Main({
               value={searchName}
               onChange={props => {
                 setSearchName(props.target.value);
+                dispatch(clearCharacters());
                 searchCharactersDebounced(props.target.value, 1);
               }}
             />
@@ -95,6 +129,7 @@ function Main({
             <IconButton
               disabled={page === 1 || loading}
               onClick={() => {
+                dispatch(clearCharacters());
                 dispatch(searchCharacters(searchName, page - 1));
               }}
             >
@@ -104,6 +139,7 @@ function Main({
             <IconButton
               disabled={page === totalPages || loading}
               onClick={() => {
+                dispatch(clearCharacters());
                 dispatch(searchCharacters(searchName, page + 1));
               }}
             >
